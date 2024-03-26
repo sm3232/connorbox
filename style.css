@@ -1,0 +1,86 @@
+:root {
+    --bg-default: #2c2c2c;
+    --fg-default: #f2c57c;
+    background: var(--bg-default);
+    font-family: 'Noto Sans Mono', monospace;
+    overflow: clip;
+}
+
+a { text-decoration: none; }
+p, a, h1 {
+    width: max-content;
+    font-weight: 1000;
+    color: var(--fg-default);
+}
+.col1 > p, .col1 > a {
+    font-size: 2em;
+    cursor: pointer;
+}
+.col1 {
+    padding-left: 2vmin;
+    display: inline-block;
+    position: relative;
+    text-align: end;
+}
+#main-container {
+    margin: 10% 0% 0% 10%;
+}
+.sidebar {
+    height: 100%;
+    position: fixed;
+    top: 0; left: 100%;
+    background-color: var(--bg-default);
+    overflow-x: hidden;
+    padding-top: 60px;
+    transition: 0.2s;
+    border-left: 1px solid var(--fg-default);
+    width: 600px;
+    display: inline-block;
+}
+.sidebar > div {
+    margin: 0 auto;
+    display: flex;
+    box-sizing: border-box;
+    position: relative;
+    padding: 1em;
+    justify-content: space-evenly;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.sidebar > div > h1 {
+    font-size: 2em;
+    text-align: center;
+}
+.sidebar > div > p, .sidebar > div > a {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+.sidebar > div > a {
+    font-size: 1.5em;
+}
+@media screen and (max-width: 700px) {
+    .sidebar { width: 300px; }
+}
+#vert {
+    flex-direction: column;
+    gap: 2em;
+}
+.lin {
+    fill: var(--fg-default);
+    width: 1em;
+    vertical-align: -0.15em;
+    height: 1em;
+}
+#gh, #ln {
+    fill: var(--fg-default);
+    font-size: initial;
+    width: 3em;
+    height: 3em;
+    padding-bottom: 100%;
+}
+#closebtn {
+    position: absolute;
+    top: 0;
+    right: 0.5em;
+    font-size: 2.5em;
+}
