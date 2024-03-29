@@ -1,4 +1,4 @@
-import * as module from "../script.js";
+import * as module from "../../scripts/script.js";
 Object.entries(module).forEach(([name, exported]) => window[name] = exported);
 const sort = () => {
     let swapped = true;

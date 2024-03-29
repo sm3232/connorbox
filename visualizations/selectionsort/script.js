@@ -1,4 +1,4 @@
-import * as module from "../script.js";
+import * as module from "../../scripts/script.js";
 Object.entries(module).forEach(([name, exported]) => window[name] = exported);
 const sort = () => {
     for(let i = 0; i < nums.length - 1; i++){
