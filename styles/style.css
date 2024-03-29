@@ -1,0 +1,29 @@
+:root {
+    --bg-default: #2c2c2c;
+    --fg-default: #f2c57c;
+    background: var(--bg-default);
+    font-family: 'Noto Sans Mono', monospace;
+    overflow: clip;
+}
+
+a { text-decoration: none; font-size: 1.5em; }
+span { cursor: pointer; width: max-content; font-weight: 1000; color: var(--fg-default); }
+p, a, h1 {
+    width: max-content;
+    font-weight: 1000;
+    color: var(--fg-default);
+    text-align: center;
+}
+.col1 > p, .col1 > a {
+    font-size: 2em;
+    cursor: pointer;
+}
+.col1 {
+    padding-left: 2vmin;
+    display: inline-block;
+    position: relative;
+    text-align: end;
+}
+#main-container {
+    margin: 10% 0% 0% 10%;
+}

@@ -16,6 +16,7 @@
 }
 a { text-decoration: none; }
 #back { display: block; z-index: 1; }
+span { cursor: pointer; width: max-content; font-weight: 1000; color: var(--fg-default); }
 p, a, h1 { width: max-content; color: var(--fg-default); }
 #sorting-container {
     width: 100%;
@@ -64,15 +65,14 @@ button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 3vmin;
-    width: 4vmin;
-    height: 4vmin;
+    font-size: 2em;
+    width: 2em;
+    height: 2em;
     cursor: pointer;
     background-color: var(--fg-default);
     color: var(--bg-default);
     border: none;
     border-radius: 10%;
-    line-height: 0;
     transition: background-color 0.2s;
 }
 button:hover {
@@ -85,26 +85,11 @@ button:active {
 }
 #iconplay, #iconpause { fill: var(--bg-default); }
 #sort, #stepforward, #stepback { width: 2em; height: 2em; }
-@media screen and (max-width: 600px) {
-#sort, #stepforward, #stepback { width: 16vmin; height: 16vmin; font-size: 16vmin;}
-}
 #main-container {
     position: relative;
     padding: 2% 3% 2% 3%;
     height: 100%;
     box-sizing: border-box;
-}
-#sidebar {
-    height: 100%;
-    width: 250px;
-    position: fixed;
-    z-index: 1000;
-    top: 0; left: 100%;
-    background-color: var(--bg-default);
-    overflow-x: hidden;
-    padding-top: 60px;
-    transition: 0.2s;
-    border-left: 1px solid var(--fg-default);
 }
 table {
     border-collapse: collapse;
@@ -114,35 +99,12 @@ table {
     font-family: 'Noto Sans Mono', monospace;
     font-size: 1em;
 }
+#table-container {
+    padding-bottom: 75px;
+}
 td, th {
     border: 1px solid var(--fg-default);
     padding: 10px;
     text-align: center;
 }
 caption { padding: 10px; }
-#sidebar > div {
-    margin: 0 auto;
-    display: flex;
-    box-sizing: border-box;
-    position: relative;
-    padding: 1em;
-    justify-content: space-evenly;
-    align-items: center;
-    flex-wrap: wrap;
-}
-#sidebar > div > h1 {
-    font-size: 2em;
-    text-align: center;
-}
-#gh, #ln {
-    fill: var(--fg-default);
-    vertical-align: -0.125em;
-    width: 2em;
-    height: 2em;
-}
-#closebtn {
-    position: absolute;
-    top: 0;
-    right: 0.5em;
-    font-size: 2.5em;
-}
