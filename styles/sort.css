@@ -83,8 +83,11 @@ button:active {
     transition: background-color 0.2s;
     background-color: var(--fg-alt2);
 }
-#iconplay, #iconpause { fill: var(--bg-default); }
-#sort, #stepforward, #stepback { width: 2em; height: 2em; }
+svg {
+    fill: var(--bg-default);
+    width: 1em;
+    height: 1em;
+}
 #main-container {
     position: relative;
     padding: 2% 3% 2% 3%;

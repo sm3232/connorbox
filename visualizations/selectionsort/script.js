@@ -1,4 +1,4 @@
-import * as module from "../../scripts/script.js";
+import * as module from "../../scripts/sort.js";
 Object.entries(module).forEach(([name, exported]) => window[name] = exported);
 const sort = () => {
     for(let i = 0; i < nums.length - 1; i++){
@@ -24,4 +24,4 @@ const sort = () => {
         nums[min] = temp;
     }
 }
-start(); resize(); sort(); animate(); update();
+generateHTML(); start(); resize(); sort(); animate(); update();

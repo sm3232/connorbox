@@ -1,4 +1,4 @@
-import * as module from "../../scripts/script.js";
+import * as module from "../../scripts/sort.js";
 Object.entries(module).forEach(([name, exported]) => window[name] = exported);
 const sort = () => {
     let swapped = true;
@@ -37,4 +37,4 @@ const sort = () => {
 
     }
 }
-start(); resize(); sort(); animate(); update();
+generateHTML(); start(); resize(); sort(); animate(); update();
