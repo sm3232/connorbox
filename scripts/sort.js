@@ -294,6 +294,10 @@ const generateHTML = () => {
         tc = [oofnlogn, oofnlogn, oofnlogn];
         link += "Merge_sort";
     }
+    if(title === "Heap"){
+        tc = [oofnlogn, oofnlogn, oofnlogn];
+        link += "Heapsort";
+    }
     document.body.innerHTML = 
         `
             <div id="sidebar-info" class="sidebar" style="left: 100%">
