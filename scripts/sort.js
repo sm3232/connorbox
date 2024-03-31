@@ -260,7 +260,6 @@ export const update = (time) => {
             ctx.closePath();
             ctx.moveTo(nums[i].pos.x + nums[i].transform.x, nums[i].pos.y + nums[i].transform.y);
             ctx.lineTo(nums[i].pos.x + nums[i].transform.x, canvas.height);
-            console.log(grabdefault);
             ctx.fillStyle = nums[i].color;
             ctx.fill();
             ctx.strokeStyle = nums[i].color;
