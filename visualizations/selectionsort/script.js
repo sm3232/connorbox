@@ -1,6 +1,6 @@
 import * as module from "../../scripts/sort.js";
 Object.entries(module).forEach(([name, exported]) => window[name] = exported);
-const sort = () => {
+const sort = (nums, steps) => {
     for(let i = 0; i < nums.length - 1; i++){
         let min = i;
         steps.push({f: grab, p:[nums[min]]});
@@ -24,4 +24,4 @@ const sort = () => {
         nums[min] = temp;
     }
 }
-generateHTML(); start(); resize(); sort(); animate(); update();
+start(sort);

@@ -6,19 +6,20 @@ export class SortingNumber {
         this.transform = new Point(0, 0);
         this.number = number_;
         this.movement = null;
+        this.color = fgdefault;
+        this.radius = 10;
     }
 }
-const frameTime = 0.010;
-const yshift = -0.15;
-const transitionDuration = 0.1;
-const MAX_NUMS = 60;
-const MIN_NUMS = 2;
+let transitionDuration = 0.1;
 const SVG_PAUSE = '<path d="M48 64C21.5 64 0 85.5 0 112V400c0 26.5 21.5 48 48 48H80c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H48zm192 0c-26.5 0-48 21.5-48 48V400c0 26.5 21.5 48 48 48h32c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H240z"/>'
 const SVG_PLAY = '<path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/>'
 const bgdefault = getComputedStyle(document.body).getPropertyValue("--bg-default");
 const fgdefault = getComputedStyle(document.body).getPropertyValue("--fg-default");
-export let nums = [];
-export let steps = [];
+const padding = 60;
+let nums = [];
+let steps = [];
+let sortfunc;
+let unwind = [];
 let index = 0;
 let playhead = 0;
 let paused = true;
@@ -29,6 +30,17 @@ let container;
 let svgContainer;
 let canvas;
 let ctx;
+let mode = true;
+const reset = () => {
+    index = 0;
+    playhead = 0;
+    paused = true;
+    stepping = false;
+    issorted = false;
+    nums = [];
+    steps = [];
+    unwind = [];
+}
 const add = (p1, p2) => new Point(p1.x + p2.x, p1.y + p2.y);
 const ease = (t) => -(Math.cos(Math.PI * t) - 1) / 2;
 const getRandomInt = (min, max) => {return Math.floor(Math.random() * (max - min) + min);}
@@ -41,26 +53,54 @@ export const resize = () => {
 const lerp = (a, b, t) => new Point(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
 const remap = (val, inMin, inMax, outMin, outMax) => outMin + (val - inMin) * (outMax - outMin) / (inMax - inMin);
 const clamp = (val, min, max) => val > max ? max : val < min ? min : val;
-export const grab = (ns) => {
+export const grab = (ns, fakedelay = false) => {
     for(let i = 0; i < ns.length; i++){
-        ns[i].movement = {t: 0, start: ns[i].transform, end: new Point(ns[i].transform.x, ns[i].transform.y - 100), d: transitionDuration};
+        if(mode){
+            ns[i].movement = {t: 0, start: ns[i].transform, end: new Point(ns[i].transform.x, ns[i].transform.y - 100), d: transitionDuration};
+        } else {
+            if(fakedelay){
+                ns[i].movement = {t: 0, start: ns[i].transform, end: ns[i].transform, d: transitionDuration};
+            }
+            ns[i].color = "red";
+        }
     }
 }
-export const release = (ns) => {
+export const release = (ns, fakedelay = false) => {
     for(let i = 0; i < ns.length; i++){
-        ns[i].movement = {t: 0, start: ns[i].transform, end: new Point(ns[i].transform.x, ns[i].transform.y + 100), d: transitionDuration};
+        if(mode){
+            ns[i].movement = {t: 0, start: ns[i].transform, end: new Point(ns[i].transform.x, ns[i].transform.y + 100), d: transitionDuration};
+        } else {
+            if(fakedelay){
+                ns[i].movement = {t: 0, start: ns[i].transform, end: ns[i].transform, d: transitionDuration};
+            }
+            ns[i].color = fgdefault;
+        }
     }
 }
-export const swap = (ns) => {
+export const swap = (ns, fakedelay = false) => {
     const dx = (ns[1].pos.x + ns[1].transform.x) - (ns[0].pos.x + ns[0].transform.x);
-    ns[0].movement = {t: 0, start: ns[0].transform, end: new Point(ns[0].transform.x + dx, ns[0].transform.y), d: transitionDuration};
-    ns[1].movement = {t: 0, start: ns[1].transform, end: new Point(ns[1].transform.x - dx, ns[1].transform.y), d: transitionDuration};
+    let td = transitionDuration;
+    if(fakedelay){
+        if(dx > canvas.width / nums.length){
+            td = 0.1;
+        }
+    }
+    ns[0].movement = {t: 0, start: ns[0].transform, end: new Point(ns[0].transform.x + dx, ns[0].transform.y), d: td};
+    ns[1].movement = {t: 0, start: ns[1].transform, end: new Point(ns[1].transform.x - dx, ns[1].transform.y), d: td};
 }
 const until = (condition) => {
     const poll = resolve => condition() ? resolve() : setTimeout(_ => poll(resolve), 16);
     return new Promise(poll);
 }
 export const animate = async () => {
+    if(unwind.length === 0 && steps.length > 0){
+        for(let i = 0; i < steps.length; i++){
+            if(steps[i].f === grab) unwind.push({f: release, p: steps[i].p});
+            if(steps[i].f === release) unwind.push({f: grab, p: steps[i].p});
+            if(steps[i].f === swap) unwind.push(steps[i]);
+        }
+        unwind.push({f: grab, p: unwind[unwind.length - 1].p});
+    }
     if(paused || issorted) return;
     await until(_ => !stepping);
     stepping = true;
@@ -93,13 +133,6 @@ const stepForward = async () => {
     stepping = false;
 }
 const stepBack = async () => {
-    let unwind = [];
-    for(let i = 0; i < steps.length; i++){
-        if(steps[i].f === grab) unwind.push({f: release, p: steps[i].p});
-        if(steps[i].f === release) unwind.push({f: grab, p: steps[i].p});
-        if(steps[i].f === swap) unwind.push(steps[i]);
-    }
-    unwind.push({f: grab, p: unwind[unwind.length - 1].p});
     if(unwind[playhead - 1] === undefined) return;
     svgContainer.setAttribute("viewBox", "0 0 384 512");
     svgContainer.innerHTML = SVG_PLAY;
@@ -112,6 +145,26 @@ const stepBack = async () => {
     for(let k = 0; k < unwind[playhead].p.length; k++) await until(_ => unwind[playhead].p[k].movement === null);
     stepping = false;
 }
+const toggleMode = async () => {
+    const svg = document.getElementById("sortmode");
+    svg.setAttribute("viewBox", `0 0 ${mode ? "512" : "448"} 512`);
+    svg.innerHTML = mode ? `<path d="M32 32c17.7 0 32 14.3 32 32V400c0 8.8 7.2 16 16 16H480c17.7 0 32 14.3 32 32s-14.3 32-32 32H80c-44.2 0-80-35.8-80-80V64C0 46.3 14.3 32 32 32zM160 224c17.7 0 32 14.3 32 32v64c0 17.7-14.3 32-32 32s-32-14.3-32-32V256c0-17.7 14.3-32 32-32zm128-64V320c0 17.7-14.3 32-32 32s-32-14.3-32-32V160c0-17.7 14.3-32 32-32s32 14.3 32 32zm64 32c17.7 0 32 14.3 32 32v96c0 17.7-14.3 32-32 32s-32-14.3-32-32V224c0-17.7 14.3-32 32-32zM480 96V320c0 17.7-14.3 32-32 32s-32-14.3-32-32V96c0-17.7 14.3-32 32-32s32 14.3 32 32z"/>` : `<path d="M181.3 32.4c17.4 2.9 29.2 19.4 26.3 36.8L197.8 128h95.1l11.5-69.3c2.9-17.4 19.4-29.2 36.8-26.3s29.2 19.4 26.3 36.8L357.8 128H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H347.1L325.8 320H384c17.7 0 32 14.3 32 32s-14.3 32-32 32H315.1l-11.5 69.3c-2.9 17.4-19.4 29.2-36.8 26.3s-29.2-19.4-26.3-36.8l9.8-58.7H155.1l-11.5 69.3c-2.9 17.4-19.4 29.2-36.8 26.3s-29.2-19.4-26.3-36.8L90.2 384H32c-17.7 0-32-14.3-32-32s14.3-32 32-32h68.9l21.3-128H64c-17.7 0-32-14.3-32-32s14.3-32 32-32h68.9l11.5-69.3c2.9-17.4 19.4-29.2 36.8-26.3zM187.1 192L165.8 320h95.1l21.3-128H187.1z"/>`;
+    mode = !mode;
+    paused = true;
+    svgContainer.setAttribute("viewBox", "0 0 384 512");
+    svgContainer.innerHTML = SVG_PLAY;
+    await until(_ => !stepping);
+    reset();
+    if(mode){
+        for(let i = 0; i < 6; i++) addNumber();
+        transitionDuration = 0.1;
+    } else {
+        for(let i = 0; i < 100; i++) addNumber();
+        transitionDuration = 0;
+    }
+    resize();
+    sortfunc(nums, steps);
+}
 const toggleButton = () => {
     if(issorted) return;
     svgContainer.setAttribute("viewBox", paused ? "0 0 320 512" : "0 0 384 512");
@@ -120,16 +173,26 @@ const toggleButton = () => {
     animate();
 }
 const addNumber = (min = 0, max = 100) => {
-    if(nums.length >= MAX_NUMS) return;
     nums.push(new SortingNumber(index, new Point(0, 0), getRandomInt(min, max))); 
     index++;
-    fixAlignment(oldsize);
 }
 const fixAlignment = (newsize) => {
     let divx = canvas.width / (nums.length + 1);
+    let highest = nums[0].number, lowest = nums[0].number;
+    if(!mode){
+        for(let i = 0; i < nums.length; i++){
+            if(nums[i].number < lowest) lowest = nums[i].number;
+            if(nums[i].number > highest) highest = nums[i].number;
+        }
+    }
+
     for(let i = 0; i < nums.length; i++){
         nums[i].pos.x = divx * (nums[i].index + 1);
-        nums[i].pos.y = canvas.height / 2;
+        if(mode){
+            nums[i].pos.y = canvas.height / 2;
+        } else {
+            nums[i].pos.y = canvas.height - remap(nums[i].number, lowest, highest, 0 + padding, canvas.height - padding);
+        }
         nums[i].transform.x = remap(nums[i].transform.x, 0, oldsize.x, 0, newsize.x);
         nums[i].transform.y = remap(nums[i].transform.y, 0, oldsize.y, 0, newsize.y);
         if(nums[i].movement !== null){
@@ -141,6 +204,7 @@ const fixAlignment = (newsize) => {
     }
 }
 const write = (text, p) => ctx.fillText(text, p.x - ctx.measureText(text).width / 2, p.y);
+const dot = (p, r) => ctx.arc(p.x, p.y, r, 0, Math.PI * 2, true);
 let previoustime = 0;
 export const update = (time) => {
     let step = time - previoustime;
@@ -155,21 +219,38 @@ export const update = (time) => {
                 nums[i].transform = nums[i].movement.end;
                 nums[i].movement = null;
             } else {
-                nums[i].transform = lerp(nums[i].movement.start, nums[i].movement.end, ease(remap(nums[i].movement.t, 0, nums[i].movement.d, 0, 1)));
+                if(mode){
+                    nums[i].transform = lerp(nums[i].movement.start, nums[i].movement.end, ease(remap(nums[i].movement.t, 0, nums[i].movement.d, 0, 1)));
+                } else {
+                    nums[i].transform = lerp(nums[i].movement.start, nums[i].movement.end, remap(nums[i].movement.t, 0, nums[i].movement.d, 0, 1));
+                }
                 nums[i].movement.t += (step / 1000);
             }
         }
-        write((nums[i].number < 10 ? '0' + nums[i].number : nums[i].number), add(nums[i].pos, nums[i].transform));
+        if(mode){
+            write((nums[i].number < 10 ? '0' + nums[i].number : nums[i].number), add(nums[i].pos, nums[i].transform));
+        } else {
+            ctx.beginPath();
+            dot(add(nums[i].pos, nums[i].transform), Math.min(window.innerWidth, window.innerHeight) * 0.01);
+            ctx.closePath();
+            ctx.moveTo(nums[i].pos.x + nums[i].transform.x, nums[i].pos.y + nums[i].transform.y);
+            ctx.lineTo(nums[i].pos.x + nums[i].transform.x, canvas.height);
+            ctx.fillStyle = nums[i].color;
+            ctx.fill();
+            ctx.strokeStyle = nums[i].color;
+            ctx.stroke();
+        }
     }
 
     previoustime = time;
     requestAnimationFrame(update);
 }
-export const generateHTML = () => {
-    let title = document.title.slice(0, document.title.length - 5);
+const generateHTML = () => {
+    let title = document.title.slice(0, document.title.length - (document.title.indexOf(' ') === -1 ? 4 : 5));
     let tc, link = "https://en.wikipedia.org/wiki/";
     let oofn = "<td><var>n</var></td>";
     let oofn2 = "<td><var>n</var><sup><var>2</var></sup></td>";
+    let oofnlogn = "<td><var>nlogn</var></td>";
     if(title === "Bubble" || title === "Gnome" || title === "Insertion" || title === "Cocktail"){
         tc = [oofn, oofn2, oofn2];
         link += title === "Cocktail" ? title + "_shaker_sort" : title + "_sort";
@@ -177,6 +258,10 @@ export const generateHTML = () => {
     if(title === "Selection"){
         tc = [oofn2, oofn2, oofn2];
         link += "Selection_sort";
+    }
+    if(title === "Quick"){
+        tc = [oofnlogn, oofnlogn, oofn2];
+        link += "Quicksort";
     }
     document.body.innerHTML = 
         `
@@ -247,23 +332,32 @@ export const generateHTML = () => {
                             <path d="M52.5 440.6c-9.5 7.9-22.8 9.7-34.1 4.4S0 428.4 0 416V96C0 83.6 7.2 72.3 18.4 67s24.5-3.6 34.1 4.4l192 160L256 241V96c0-17.7 14.3-32 32-32s32 14.3 32 32V416c0 17.7-14.3 32-32 32s-32-14.3-32-32V271l-11.5 9.6-192 160z"/>
                         </svg>
                     </button>
+                    <button>
+                        <svg id="sortmode" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                            <!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
+                            <path d="M181.3 32.4c17.4 2.9 29.2 19.4 26.3 36.8L197.8 128h95.1l11.5-69.3c2.9-17.4 19.4-29.2 36.8-26.3s29.2 19.4 26.3 36.8L357.8 128H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H347.1L325.8 320H384c17.7 0 32 14.3 32 32s-14.3 32-32 32H315.1l-11.5 69.3c-2.9 17.4-19.4 29.2-36.8 26.3s-29.2-19.4-26.3-36.8l9.8-58.7H155.1l-11.5 69.3c-2.9 17.4-19.4 29.2-36.8 26.3s-29.2-19.4-26.3-36.8L90.2 384H32c-17.7 0-32-14.3-32-32s14.3-32 32-32h68.9l21.3-128H64c-17.7 0-32-14.3-32-32s14.3-32 32-32h68.9l11.5-69.3c2.9-17.4 19.4-29.2 36.8-26.3zM187.1 192L165.8 320h95.1l21.3-128H187.1z"/>
+                        </svg>
+                    </button>
                 </div>
             </div>
         `;
 }
-export const start = () => {
-
+export const start = (sf) => {
+    generateHTML();
     container = document.getElementById("sorting-container");
     svgContainer = document.getElementById("sort");
     canvas = document.getElementById("canvas");
     ctx = canvas.getContext("2d");
     oldsize = new Point(container.clientWidth, container.clientHeight);
-
-
     document.getElementById("sort").parentElement.addEventListener("click", () => toggleButton());
     document.getElementById("stepback").parentElement.addEventListener("click", () => stepBack());
     document.getElementById("stepforward").parentElement.addEventListener("click", () => stepForward());
+    document.getElementById("sortmode").parentElement.addEventListener("click", () => toggleMode());
     addEventListener("resize", resize);
-    
     for(let i = 0; i < 6; i++) addNumber();
+    resize();
+    sortfunc = sf;
+    sortfunc(nums, steps);
+    animate();
+    update();
 }

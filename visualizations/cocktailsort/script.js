@@ -1,6 +1,6 @@
 import * as module from "../../scripts/sort.js";
 Object.entries(module).forEach(([name, exported]) => window[name] = exported);
-const sort = () => {
+const sort = (nums, steps) => {
     let swapped = true;
     while(swapped){
         swapped = false;
@@ -37,4 +37,4 @@ const sort = () => {
 
     }
 }
-generateHTML(); start(); resize(); sort(); animate(); update();
+start(sort);
