@@ -8,6 +8,8 @@
     --fg-default: #f2c57c;
     --fg-alt2: #c19f68;
     --fg-alt1: #dab272;
+    --grab: #ff0000;
+    --highlight: #32cd32;
 
     background: var(--bg-default);
     overflow: clip;

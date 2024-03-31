@@ -15,7 +15,11 @@ const SVG_PAUSE = '<path d="M48 64C21.5 64 0 85.5 0 112V400c0 26.5 21.5 48 48 48
 const SVG_PLAY = '<path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/>'
 const bgdefault = getComputedStyle(document.body).getPropertyValue("--bg-default");
 const fgdefault = getComputedStyle(document.body).getPropertyValue("--fg-default");
+const highlightdefault = getComputedStyle(document.body).getPropertyValue("--highlight");
+const grabdefault = getComputedStyle(document.body).getPropertyValue("--grab");
 const padding = 60;
+const DEFAULT_N_SIZE = 8;
+const DEFAULT_C_SIZE = 100;
 let nums = [];
 let steps = [];
 let sortfunc;
@@ -30,7 +34,8 @@ let container;
 let svgContainer;
 let canvas;
 let ctx;
-let mode = true;
+let mode = false;
+let fakedelay = false;
 const reset = () => {
     index = 0;
     playhead = 0;
@@ -53,40 +58,57 @@ export const resize = () => {
 const lerp = (a, b, t) => new Point(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
 const remap = (val, inMin, inMax, outMin, outMax) => outMin + (val - inMin) * (outMax - outMin) / (inMax - inMin);
 const clamp = (val, min, max) => val > max ? max : val < min ? min : val;
-export const grab = (ns, fakedelay = false) => {
+export const grab = (ns) => {
     for(let i = 0; i < ns.length; i++){
         if(mode){
             ns[i].movement = {t: 0, start: ns[i].transform, end: new Point(ns[i].transform.x, ns[i].transform.y - 100), d: transitionDuration};
         } else {
-            if(fakedelay){
-                ns[i].movement = {t: 0, start: ns[i].transform, end: ns[i].transform, d: transitionDuration};
-            }
-            ns[i].color = "red";
+            ns[i].color = grabdefault;
         }
     }
 }
-export const release = (ns, fakedelay = false) => {
+export const release = (ns) => {
     for(let i = 0; i < ns.length; i++){
         if(mode){
             ns[i].movement = {t: 0, start: ns[i].transform, end: new Point(ns[i].transform.x, ns[i].transform.y + 100), d: transitionDuration};
         } else {
-            if(fakedelay){
-                ns[i].movement = {t: 0, start: ns[i].transform, end: ns[i].transform, d: transitionDuration};
-            }
             ns[i].color = fgdefault;
         }
     }
 }
-export const swap = (ns, fakedelay = false) => {
-    const dx = (ns[1].pos.x + ns[1].transform.x) - (ns[0].pos.x + ns[0].transform.x);
-    let td = transitionDuration;
-    if(fakedelay){
-        if(dx > canvas.width / nums.length){
-            td = 0.1;
+export const swap = (ns) => {
+    for(let i = 0; i < ns.length; i += 2){
+        const dx = (ns[i + 1].pos.x + ns[i + 1].transform.x) - (ns[i].pos.x + ns[i].transform.x);
+        let td = transitionDuration;
+        if(fakedelay){
+            if(dx > canvas.width / nums.length){
+                td = 0.1;
+            }
         }
+        ns[i].movement = {t: 0, start: ns[i].transform, end: new Point(ns[i].transform.x + dx, ns[i].transform.y), d: td};
+        ns[i + 1].movement = {t: 0, start: ns[i + 1].transform, end: new Point(ns[i + 1].transform.x - dx, ns[i + 1].transform.y), d: td};
+
     }
-    ns[0].movement = {t: 0, start: ns[0].transform, end: new Point(ns[0].transform.x + dx, ns[0].transform.y), d: td};
-    ns[1].movement = {t: 0, start: ns[1].transform, end: new Point(ns[1].transform.x - dx, ns[1].transform.y), d: td};
+}
+export const shift = (ns) => {
+    let dx = Math.abs((ns[1].pos.x + ns[1].transform.x) - (ns[0].pos.x + ns[0].transform.x));
+    for(let i = ns.length - 1; i >= 0; i--) ns[i].movement = {t: 0, start: ns[i].transform, end: new Point(ns[i].transform.x + dx, ns[i].transform.y), d: transitionDuration};        
+    dx = (ns[ns.length - 2].pos.x + ns[ns.length - 2].transform.x) - (ns[ns.length - 1].pos.x + ns[ns.length - 1].transform.x);
+    ns[ns.length - 1].movement = {t: 0, start: ns[ns.length - 1].transform, end: new Point(ns[ns.length - 1].transform.x + dx, ns[ns.length - 1].transform.y), d: transitionDuration};
+}
+export const unshift = (ns) => {
+    let dx = (ns[0].pos.x + ns[0].transform.x) - (ns[ns.length - 1].pos.x + ns[ns.length - 1].transform.x);
+    ns[ns.length - 1].movement = {t: 0, start: ns[ns.length - 1].transform, end: new Point(ns[ns.length - 1].transform.x + dx, ns[ns.length - 1].transform.y), d: transitionDuration};
+    dx = -Math.abs((ns[1].pos.x + ns[1].transform.x) - (ns[0].pos.x + ns[0].transform.x));
+    for(let i = ns.length - 2; i >= 0; i--) ns[i].movement = {t: 0, start: ns[i].transform, end: new Point(ns[i].transform.x + dx, ns[i].transform.y), d: transitionDuration};
+}
+export const highlight = (ns) => {
+    if(mode) return;
+    for(let i = 0; i < ns.length; i++) ns[i].color = highlightdefault;
+}
+export const unhighlight = (ns) => {
+    if(mode) return;
+    for(let i = 0; i < ns.length; i++) ns[i].color = fgdefault;
 }
 const until = (condition) => {
     const poll = resolve => condition() ? resolve() : setTimeout(_ => poll(resolve), 16);
@@ -98,6 +120,9 @@ export const animate = async () => {
             if(steps[i].f === grab) unwind.push({f: release, p: steps[i].p});
             if(steps[i].f === release) unwind.push({f: grab, p: steps[i].p});
             if(steps[i].f === swap) unwind.push(steps[i]);
+            if(steps[i].f === shift) unwind.push({f: unshift, p: steps[i].p});
+            if(steps[i].f === highlight) unwind.push({f: unhighlight, p: steps[i].p});
+            if(steps[i].f === unhighlight) unwind.push({f: highlight, p: steps[i].p});
         }
         unwind.push({f: grab, p: unwind[unwind.length - 1].p});
     }
@@ -156,10 +181,10 @@ const toggleMode = async () => {
     await until(_ => !stepping);
     reset();
     if(mode){
-        for(let i = 0; i < 6; i++) addNumber();
+        for(let i = 0; i < DEFAULT_N_SIZE; i++) addNumber();
         transitionDuration = 0.1;
     } else {
-        for(let i = 0; i < 100; i++) addNumber();
+        for(let i = 0; i < DEFAULT_C_SIZE; i++) addNumber();
         transitionDuration = 0;
     }
     resize();
@@ -235,6 +260,7 @@ export const update = (time) => {
             ctx.closePath();
             ctx.moveTo(nums[i].pos.x + nums[i].transform.x, nums[i].pos.y + nums[i].transform.y);
             ctx.lineTo(nums[i].pos.x + nums[i].transform.x, canvas.height);
+            console.log(grabdefault);
             ctx.fillStyle = nums[i].color;
             ctx.fill();
             ctx.strokeStyle = nums[i].color;
@@ -258,10 +284,16 @@ const generateHTML = () => {
     if(title === "Selection"){
         tc = [oofn2, oofn2, oofn2];
         link += "Selection_sort";
+        fakedelay = true;
     }
     if(title === "Quick"){
         tc = [oofnlogn, oofnlogn, oofn2];
         link += "Quicksort";
+        fakedelay = true;
+    }
+    if(title === "Merge"){
+        tc = [oofnlogn, oofnlogn, oofnlogn];
+        link += "Merge_sort";
     }
     document.body.innerHTML = 
         `
@@ -333,9 +365,9 @@ const generateHTML = () => {
                         </svg>
                     </button>
                     <button>
-                        <svg id="sortmode" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                        <svg id="sortmode" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                             <!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
-                            <path d="M181.3 32.4c17.4 2.9 29.2 19.4 26.3 36.8L197.8 128h95.1l11.5-69.3c2.9-17.4 19.4-29.2 36.8-26.3s29.2 19.4 26.3 36.8L357.8 128H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H347.1L325.8 320H384c17.7 0 32 14.3 32 32s-14.3 32-32 32H315.1l-11.5 69.3c-2.9 17.4-19.4 29.2-36.8 26.3s-29.2-19.4-26.3-36.8l9.8-58.7H155.1l-11.5 69.3c-2.9 17.4-19.4 29.2-36.8 26.3s-29.2-19.4-26.3-36.8L90.2 384H32c-17.7 0-32-14.3-32-32s14.3-32 32-32h68.9l21.3-128H64c-17.7 0-32-14.3-32-32s14.3-32 32-32h68.9l11.5-69.3c2.9-17.4 19.4-29.2 36.8-26.3zM187.1 192L165.8 320h95.1l21.3-128H187.1z"/>
+                            <path d="M32 32c17.7 0 32 14.3 32 32V400c0 8.8 7.2 16 16 16H480c17.7 0 32 14.3 32 32s-14.3 32-32 32H80c-44.2 0-80-35.8-80-80V64C0 46.3 14.3 32 32 32zM160 224c17.7 0 32 14.3 32 32v64c0 17.7-14.3 32-32 32s-32-14.3-32-32V256c0-17.7 14.3-32 32-32zm128-64V320c0 17.7-14.3 32-32 32s-32-14.3-32-32V160c0-17.7 14.3-32 32-32s32 14.3 32 32zm64 32c17.7 0 32 14.3 32 32v96c0 17.7-14.3 32-32 32s-32-14.3-32-32V224c0-17.7 14.3-32 32-32zM480 96V320c0 17.7-14.3 32-32 32s-32-14.3-32-32V96c0-17.7 14.3-32 32-32s32 14.3 32 32z"/> 
                         </svg>
                     </button>
                 </div>
@@ -354,7 +386,13 @@ export const start = (sf) => {
     document.getElementById("stepforward").parentElement.addEventListener("click", () => stepForward());
     document.getElementById("sortmode").parentElement.addEventListener("click", () => toggleMode());
     addEventListener("resize", resize);
-    for(let i = 0; i < 6; i++) addNumber();
+    if(mode){
+        for(let i = 0; i < DEFAULT_N_SIZE; i++) addNumber();
+        transitionDuration = 0.1;
+    } else {
+        for(let i = 0; i < DEFAULT_C_SIZE; i++) addNumber();
+        transitionDuration = 0;
+    }
     resize();
     sortfunc = sf;
     sortfunc(nums, steps);
