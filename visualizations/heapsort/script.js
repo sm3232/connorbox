@@ -20,7 +20,9 @@ const sort = (nums, steps) => {
     const heapsort = (n) => {
         for(let i = parseInt(n.length / 2 - 1); i >= 0; i--) heapify(n, n.length, i);
         for(let i = n.length - 1; i >= 0; i--){
+            steps.push({f: grab, p: [n[0], n[i]]});
             steps.push({f: swap, p: [n[0], n[i]]});
+            steps.push({f: release, p: [n[0], n[i]]});
             let temp = n[0];
             n[0] = n[i];
             n[i] = temp;
