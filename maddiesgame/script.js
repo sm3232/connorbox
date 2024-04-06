@@ -294,21 +294,11 @@ const update = (time) => {
 
 
 addEventListener("resize", resize);
-addEventListener("touchstart", () => grab());
-addEventListener("touchend", () => release());
 addEventListener("mousedown", () => grab());
 addEventListener("mouseup", () => release());
 addEventListener("mousemove", (e) => {
-    mousePosition = new Point(e.layerX, e.layerY);
-    if(shapes[grabbedShape] !== undefined){
-        shapes[grabbedShape].center = mousePosition;
-        shapes[grabbedShape].recalc();
-    }
-    calcScore();
-});
-addEventListener("touchmove", (e) => {
-    mousePosition = new Point(e.touches[0].clientX - e.target.getBoundingClientRect().left, e.touches[0].clientY - e.target.getBoundingClientRect().top);
-    console.log(mousePosition);
+
+    mousePosition = new Point(e.pageX - canvas.getBoundingClientRect().left, e.pageY - canvas.getBoundingClientRect().top);
     if(shapes[grabbedShape] !== undefined){
         shapes[grabbedShape].center = mousePosition;
         shapes[grabbedShape].recalc();
