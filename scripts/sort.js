@@ -1,4 +1,12 @@
 class Point { constructor(x_, y_){this.x = x_; this.y = y_;} }
+class Movement {
+    constructor(start_, end_, duration_){
+        this.t = 0;
+        this.start = start_;
+        this.end = end_;
+        this.duration = duration_;
+    }
+}
 export class SortingNumber {
     constructor(index_, pos_, number_){
         this.index = index_;
@@ -63,7 +71,7 @@ const clamp = (val, min, max) => val > max ? max : val < min ? min : val;
 export const grab = (ns) => {
     for(let i = 0; i < ns.length; i++){
         if(mode){
-            ns[i].movement = {t: 0, start: ns[i].transform, end: new Point(ns[i].transform.x, ns[i].transform.y - 100), d: transitionDuration};
+            ns[i].movement = new Movement(ns[i].transform, new Point(ns[i].transform.x, ns[i].transform.y - 100), transitionDuration);
         } else {
             ns[i].color = grabdefault;
         }
@@ -72,7 +80,7 @@ export const grab = (ns) => {
 export const release = (ns) => {
     for(let i = 0; i < ns.length; i++){
         if(mode){
-            ns[i].movement = {t: 0, start: ns[i].transform, end: new Point(ns[i].transform.x, ns[i].transform.y + 100), d: transitionDuration};
+            ns[i].movement = new Movement(ns[i].transform, new Point(ns[i].transform.x, ns[i].transform.y + 100), transitionDuration);
         } else {
             ns[i].color = fgdefault;
         }
@@ -87,22 +95,21 @@ export const swap = (ns) => {
                 td = 0.1;
             }
         }
-        ns[i].movement = {t: 0, start: ns[i].transform, end: new Point(ns[i].transform.x + dx, ns[i].transform.y), d: td};
-        ns[i + 1].movement = {t: 0, start: ns[i + 1].transform, end: new Point(ns[i + 1].transform.x - dx, ns[i + 1].transform.y), d: td};
-
+        ns[i].movement = new Movement(ns[i].transform, new Point(ns[i].transform.x + dx, ns[i].transform.y), td);
+        ns[i + 1].movement = new Movement(ns[i + 1].transform, new Point(ns[i + 1].transform.x - dx, ns[i + 1].transform.y), td);
     }
 }
 export const shift = (ns) => {
     let dx = Math.abs((ns[1].pos.x + ns[1].transform.x) - (ns[0].pos.x + ns[0].transform.x));
-    for(let i = ns.length - 1; i >= 0; i--) ns[i].movement = {t: 0, start: ns[i].transform, end: new Point(ns[i].transform.x + dx, ns[i].transform.y), d: transitionDuration};        
+    for(let i = ns.length - 1; i >= 0; i--) ns[i].movement = new Movement(ns[i].transform, new Point(ns[i].transform.x + dx, ns[i].transform.y), transitionDuration);
     dx = (ns[ns.length - 2].pos.x + ns[ns.length - 2].transform.x) - (ns[ns.length - 1].pos.x + ns[ns.length - 1].transform.x);
-    ns[ns.length - 1].movement = {t: 0, start: ns[ns.length - 1].transform, end: new Point(ns[ns.length - 1].transform.x + dx, ns[ns.length - 1].transform.y), d: transitionDuration};
+    ns[ns.length - 1].movement = new Movement(ns[ns.length - 1].transform, new Point(ns[ns.length - 1].transform.x + dx, ns[ns.length - 1].transform.y), transitionDuration);
 }
 export const unshift = (ns) => {
     let dx = (ns[0].pos.x + ns[0].transform.x) - (ns[ns.length - 1].pos.x + ns[ns.length - 1].transform.x);
-    ns[ns.length - 1].movement = {t: 0, start: ns[ns.length - 1].transform, end: new Point(ns[ns.length - 1].transform.x + dx, ns[ns.length - 1].transform.y), d: transitionDuration};
+    ns[ns.length - 1].movement = new Movement(ns[ns.length - 1].transform, new Point(ns[ns.length - 1].transform.x + dx, ns[ns.length - 1].transform.y), transitionDuration);
     dx = -Math.abs((ns[1].pos.x + ns[1].transform.x) - (ns[0].pos.x + ns[0].transform.x));
-    for(let i = ns.length - 2; i >= 0; i--) ns[i].movement = {t: 0, start: ns[i].transform, end: new Point(ns[i].transform.x + dx, ns[i].transform.y), d: transitionDuration};
+    for(let i = ns.length - 2; i >= 0; i--) ns[i].movement = new Movement(ns[i].transform, new Point(ns[i].transform.x + dx, ns[i].transform.y), transitionDuration);
 }
 export const highlight = (ns) => {
     if(mode) return;
@@ -242,14 +249,14 @@ export const update = (time) => {
     
     for(let i = 0; i < nums.length; i++) {
         if(nums[i].movement !== null){
-            if(nums[i].movement.t >= nums[i].movement.d){
+            if(nums[i].movement.t >= nums[i].movement.duration){
                 nums[i].transform = nums[i].movement.end;
                 nums[i].movement = null;
             } else {
                 if(mode){
-                    nums[i].transform = lerp(nums[i].movement.start, nums[i].movement.end, ease(remap(nums[i].movement.t, 0, nums[i].movement.d, 0, 1)));
+                    nums[i].transform = lerp(nums[i].movement.start, nums[i].movement.end, ease(remap(nums[i].movement.t, 0, nums[i].movement.duration, 0, 1)));
                 } else {
-                    nums[i].transform = lerp(nums[i].movement.start, nums[i].movement.end, remap(nums[i].movement.t, 0, nums[i].movement.d, 0, 1));
+                    nums[i].transform = lerp(nums[i].movement.start, nums[i].movement.end, remap(nums[i].movement.t, 0, nums[i].movement.duration, 0, 1));
                 }
                 nums[i].movement.t += (step / 1000);
             }
