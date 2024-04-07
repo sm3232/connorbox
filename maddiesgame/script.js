@@ -307,6 +307,7 @@ const getMessage = (n) => {
         "A 2 year old could do this.",
         "Would it kill you to go faster?",
         "HURRY UPPPPPPP",
+        "I could have done that in my sleep",
     ];
     return(messages[n % messages.length]);
 }
