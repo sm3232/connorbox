@@ -6,7 +6,7 @@
     overflow: clip;
 }
 span { cursor: pointer; width: max-content; font-weight: 1000; color: var(--fg-default); }
-p, a, h1 {
+p, a, h1, h2{
     width: max-content;
     font-weight: 1000;
     color: var(--fg-default);

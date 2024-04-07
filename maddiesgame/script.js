@@ -146,7 +146,7 @@ let start, end;
 let oldsize = new Point(container.clientWidth, container.clientHeight);
 let outlines = [];
 let shapes = [];
-let levelNumber = 1;
+let levelNumber = (localStorage.getItem("level") || 1);
 let levelMaxScore = 0;
 let mousePosition = new Point(0, 0);
 let grabbedShape = null;
@@ -259,6 +259,7 @@ const calcScore = async () => {
         await new Promise((r) => setTimeout(r, 1000));
         osc.stop();
         levelNumber++;
+        localStorage.setItem("level", levelNumber)
         generateLevel();
         celebrating = false;
     }
@@ -331,10 +332,13 @@ const update = (time) => {
 
     requestAnimationFrame(update);
 }
-
-
-
-
+document.getElementById("resetNumberEl").addEventListener("click", () => {
+    if(confirm("Are you sure?")) {
+        localStorage.clear();
+        levelNumber = 1;
+        generateLevel();
+    }
+});
 
 addEventListener("resize", resize);
 addEventListener("mousedown", () => grab());
@@ -351,6 +355,9 @@ addEventListener("mousemove", (e) => {
         }
     }
 });
+
+
+
 resize();
 generateLevel();
 update();
