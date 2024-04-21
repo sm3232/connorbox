@@ -26,6 +26,8 @@
     animation-duration: 2s;
     animation-timing-function: cubic-bezier(0, 1, 0, 1);
     transition: opacity 1s;
+    font-size: 6em;
+    font-weight: 100;
 }
 .choiceContainer {
     width: 100%;
