@@ -1,0 +1,96 @@
+:root {
+    --bg-default: #2c2c2c;
+    --fg-default: #f2c57c;
+    --bg-h1: #444444;
+    --fg-alt2: #c19f68;
+    --fg-alt1: #dab272;
+    --grab: #ff0000;
+    --highlight: #32cd32;
+    background: var(--bg-default);
+    overflow: clip;
+}
+@keyframes flyDown {
+    0% {
+        transform: translateY(-100vmin);
+    }
+    100% {
+        transform: translateY(0%);
+    }
+}
+.fancyFont { font-family: "Jacquard 24"; }
+.defaultFont { font-family: "Nunito Sans"; }
+.promptFont { font-family: "Lugrasimo"; }
+.titleCard {
+    opacity: 0;
+    animation-name: flyDown;
+    animation-duration: 2s;
+    animation-timing-function: cubic-bezier(0, 1, 0, 1);
+    transition: opacity 1s;
+}
+.choiceContainer {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    display: flex;
+    flex-flow: row;
+    justify-content: space-around;
+    align-items: center;
+}
+.choice {
+    flex-basis: 100%;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 1s;
+    font-size: 2.5em;
+}
+.choiceText {
+    opacity: 0;
+    scale: 1;
+    transition: scale 0.2s, opacity 1s;
+    cursor: pointer;
+}
+.choiceText:hover {
+    scale: 1.1;
+}
+.paraPart {
+    opacity: 0;
+    font-size: 2em;
+    text-align: center;
+    width: 50%;
+    font-style: italic;
+    transition: opacity 1s;
+}
+.prompt {
+    opacity: 0;
+    font-size: 2em;
+    text-align: center;
+    width: 50%;
+    transition: opacity 1s;
+}
+.fadeIn {
+    opacity: 1;
+}
+
+a { text-decoration: none; }
+#back { display: block; z-index: 1; }
+span {
+    transition: opacity 5s;
+}
+p, a, h1 { 
+    width: max-content; color: var(--fg-default); 
+}
+h1 { font-size: 5em; }
+#content{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin: 0 auto;
+    width: 100%;
+    height: 100%;
+}
+svg {
+    fill: var(--bg-default);
+    width: 1em;
+    height: 1em;
+}
