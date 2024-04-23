@@ -1,7 +1,7 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-analytics.js";
-import { getDatabase, set, ref, get, child, query, orderByChild, orderByValue, limitToLast } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js'
+import { getDatabase, set, ref, get, child, query, orderByChild, orderByValue, limitToFirst } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js'
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js'
 const firebaseConfig = {
     apiKey: "AIzaSyC4sN4dB9KWDWF2qJPw8klnBY23STv7J90",
@@ -197,15 +197,16 @@ const getRandomInt = (min, max) => {
 
 const getLeaderboard = async () => {
     await until(_ => anonSignedIn === true);
-    const data = await get(query(ref(db, "scores"), orderByChild("score"), limitToLast(10)));
+    const data = await get(query(ref(db, "scores"), orderByChild("score"), limitToFirst(10)));
     leaderboard = [];
     data.forEach((e) => {
         leaderboard.push({name: e.val().name, score: e.val().score});
     });
     leaderboard.reverse();
     const lb = document.getElementById("leaderboardBody");
+    lb.innerHTML = "";
     for(let i = 0; i < leaderboard.length; i++){
-        lb.innerHTML = `
+        lb.innerHTML += `
             <tr>
                 <td>${i + 1}</td>
                 <td>${leaderboard[i].name}</td>
@@ -381,7 +382,7 @@ const getMessage = (n) => {
     if(levelNumber >= 6){
         if(localStorage.getItem("besttime") === null) localStorage.setItem("besttime", ((end - start) / 1000).toFixed(7));
         if(parseFloat(localStorage.getItem("besttime")) > ((end - start) / 1000).toFixed(7)) localStorage.setItem("besttime", (((end - start) / 1000).toFixed(7)));
-        document.getElementById("bestTime").innerText = `Best time: ${localStorage.getItem("besttime") | "N/A"}`;
+        document.getElementById("bestTime").innerText = `Best time: ${localStorage.getItem("besttime").toString() || "N/A"}`;
     }
     return(messages[n % messages.length]);
 }
@@ -478,7 +479,7 @@ const startStuff = async () => {
         window.location.reload();
     } else {
         document.getElementById("playerName").innerText = `Player name: ${localStorage.getItem("name")}`;
-        document.getElementById("bestTime").innerText = `Best time: ${localStorage.getItem("besttime") | "N/A"}`;
+        document.getElementById("bestTime").innerText = `Best time: ${localStorage.getItem("besttime").toString() || "N/A"}`;
         resize();
         generateLevel();
         canvas = document.getElementById("canvas");
@@ -490,4 +491,3 @@ const startStuff = async () => {
 
 resize();
 startStuff();
-getLeaderboard();
