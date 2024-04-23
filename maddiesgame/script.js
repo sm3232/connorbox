@@ -179,7 +179,7 @@ let start, end;
 let oldsize = new Point(container.clientWidth, container.clientHeight);
 let outlines = [];
 let shapes = [];
-let levelNumber = (localStorage.getItem("level") | 1);
+let levelNumber = (localStorage.getItem("level") || 1);
 let playerName = localStorage.getItem("name");
 let levelMaxScore = 0;
 let mousePosition = new Point(0, 0);
@@ -194,6 +194,26 @@ const getRandomInt = (min, max) => {
     return r;
 }
 
+
+const getLeaderboard = async () => {
+    await until(_ => anonSignedIn === true);
+    const data = await get(query(ref(db, "scores"), orderByChild("score"), limitToLast(10)));
+    leaderboard = [];
+    data.forEach((e) => {
+        leaderboard.push({name: e.val().name, score: e.val().score});
+    });
+    leaderboard.reverse();
+    const lb = document.getElementById("leaderboardBody");
+    for(let i = 0; i < leaderboard.length; i++){
+        lb.innerHTML = `
+            <tr>
+                <td>${i + 1}</td>
+                <td>${leaderboard[i].name}</td>
+                <td>${leaderboard[i].score}</td>
+            </tr>
+        `
+    }
+}
 const resize = () => {
     canvas = document.getElementById("canvas");
     canvas.width = canvas.offsetWidth;
@@ -259,6 +279,7 @@ const generateLevel = () => {
         outlines[outlines.length - 1].recalc();
         shapes[shapes.length - 1].recalc();
     }
+    getLeaderboard();
 }
 
 let celebrating = false;
@@ -273,6 +294,7 @@ const pushScore = async () => {
     });
 }
 const calcScore = async () => {
+    if(!anonSignedIn) return;
     if(celebrating) return;
     let score = 0;
     for(let i = 0; i < shapes.length; i++){
@@ -280,6 +302,7 @@ const calcScore = async () => {
             score++;
         }
     }
+    console.log(score);
     if(score === levelMaxScore){
         celebrating = true;
         const osc = new OscillatorNode(actx);
@@ -302,7 +325,7 @@ const calcScore = async () => {
         osc.stop();
         levelNumber++;
         localStorage.setItem("level", levelNumber)
-        if(levelNumber % 5 === 0){
+        if(levelNumber % 3 === 0){
             pushScore();
         }
 
@@ -442,24 +465,6 @@ addEventListener("mousemove", (e) => {
     }
 });
 
-const getLeaderboard = async () => {
-    await until(_ => anonSignedIn === true);
-    const data = await get(query(ref(db, "scores"), orderByChild("score"), limitToLast(10)));
-    data.forEach((e) => {
-        leaderboard.push({name: e.val().name, score: e.val().score});
-    });
-    leaderboard.reverse();
-    const lb = document.getElementById("leaderboardBody");
-    for(let i = 0; i < leaderboard.length; i++){
-        lb.innerHTML += `
-            <tr>
-                <td>${i + 1}</td>
-                <td>${leaderboard[i].name}</td>
-                <td>${leaderboard[i].score}</td>
-            </tr>
-        `
-    }
-}
 
 
 const startStuff = async () => {
