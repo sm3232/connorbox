@@ -375,7 +375,7 @@ const makeNamePrompt = () => {
         <div id="namePrompt" class="noclose-prompt">
             <span class="closebtn">&times;</span>
             <p class="noclose-prompt">Enter name?</p>
-            <input id="nameEntry" type="text" class="noclose-prompt" placeholder="Leaderboard entry" pattern="[A-z]{3,20}"></input>
+            <input id="nameEntry" type="text" class="noclose-prompt" placeholder="Leaderboard entry" pattern="[A-z]{3,50}| |."></input>
             <div class="noclose-prompt"><button id="submitName" class="noclose-prompt">Submit</button></div>
         </div>
     `
@@ -384,7 +384,7 @@ const makeNamePrompt = () => {
     const entry = document.getElementById("nameEntry");
     namePromptActive = true;
     submit.addEventListener("click", () => {
-        if(!entry.validity.patternMismatch && entry.value.length >= 3 && entry.value.length < 15){
+        if(!entry.validity.patternMismatch && entry.value.length >= 3 && entry.value.length < 50){
             localStorage.setItem("name", entry.value);
             playerName = entry.value;
             document.getElementById("playerName").innerText = `Player name: ${playerName}`;
