@@ -28,6 +28,7 @@
     transition: opacity 1s;
     font-size: 6em;
     font-weight: 100;
+    text-align: center;
 }
 .choiceContainer {
     width: 100%;
@@ -95,4 +96,17 @@ svg {
     fill: var(--bg-default);
     width: 1em;
     height: 1em;
+}
+@media screen and (max-width: 700px) {
+    .paraPart {
+        font-size: 1.5em;
+        width: 75%;
+    }
+    .prompt {
+        font-size: 1.5em;
+        width: 75%;
+    }
+    .choice {
+        font-size: 1.5em;
+    }
 }

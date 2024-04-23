@@ -128,6 +128,7 @@ const move = async (element, x, y) => {
     step();
     await _for(1, 1);
 }
+let earlyExit = false;
 
 const start = async (skipIndex = 0) => {
     let skipToStep = skipIndex;
@@ -222,9 +223,28 @@ const start = async (skipIndex = 0) => {
                 await doTitle("Game Over");
                 await doExposition("Dame Van Winkle caught you sleeping and it seems like that was the last straw for her.");
                 await doExposition("She\'s leaving, and she\'s taking the kids with her.");
-                skipToStep = 0;
+                await doPrompt(`Score: ${karma}`);
+
+                container.innerHTML += `
+                    <div class="choice choiceContainer">
+                        <p class="choice choiceText fancyFont">Play Again?</p>
+                    </div>
+                `;
+                const e = document.querySelectorAll(".choice");
+                await new Promise(r => setTimeout(r, 100));
+                e.forEach((e) => e.classList.add("fadeIn"));
+                await until(progress);
+                const pr = document.querySelector(".prompt");
+                fadeOut([pr, ...e]);
+                await until([pr, ...e], "transitionend");
+                document.querySelector(".choiceContainer").removeChild(document.querySelector(".choiceText"));
+                container.removeChild(pr);
+                container.removeChild(document.querySelector(".choiceContainer"));
+                earlyExit = true;
+                await _for(500, 0);
+            } else {
+                await doExposition("Despite the urge to sleep, you decide to keep hunting.");
             }
-            await doExposition("Despite the urge to sleep, you decide to keep hunting.");
         },
         async () => await doExposition("You and Wolf venture to one of the highest points on the mountains."),
         async () => await doExposition("Fatigued from your journey so far, you decide to rest on a nearby rock."),
@@ -268,11 +288,15 @@ const start = async (skipIndex = 0) => {
     ];
 
     while(1){
-        for(; skipToStep < steps.length; skipToStep++) await steps[skipToStep]();
+        for(; skipToStep < steps.length; skipToStep++) {
+            await steps[skipToStep]();
+            if(earlyExit) break;
+        }
+        earlyExit = false;
         skipToStep = 0;
     }
 }
 
 
 
-start(0)
+start(15)
