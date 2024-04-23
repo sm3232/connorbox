@@ -303,7 +303,6 @@ const calcScore = async () => {
             score++;
         }
     }
-    console.log(score);
     if(score === levelMaxScore){
         celebrating = true;
         const osc = new OscillatorNode(actx);
@@ -479,7 +478,7 @@ const startStuff = async () => {
         window.location.reload();
     } else {
         document.getElementById("playerName").innerText = `Player name: ${localStorage.getItem("name")}`;
-        document.getElementById("bestTime").innerText = `Best time: ${localStorage.getItem("besttime").toString() || "N/A"}`;
+        document.getElementById("bestTime").innerText = `Best time: ${(localStorage.getItem("besttime") || "N/A").toString()}`;
         resize();
         generateLevel();
         canvas = document.getElementById("canvas");
