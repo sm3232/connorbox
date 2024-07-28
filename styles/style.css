@@ -1,6 +1,6 @@
 :root {
     --bg-default: #2c2c2c;
-    --fg-default: #f2c57c;
+    --fg-default: #8090c0;
     background: var(--bg-default);
     font-family: 'Noto Sans Mono', monospace;
     overflow: clip;
