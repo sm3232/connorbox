@@ -1,6 +1,6 @@
 :root {
     --bg-default: #2c2c2c;
-    --fg-default: #f2c57c;
+    --fg-default: #8090c0;
     background: var(--bg-default);
     font-family: 'Noto Sans Mono', monospace;
     overflow: clip;
@@ -39,9 +39,17 @@ p, a, h1, h2{
 @media screen and (max-width: 700px) {
     .sidebar { width: 300px; }
 }
-#vert {
+.vert {
     flex-direction: column;
     gap: 2em;
+}
+.vert > div {
+    display: flex;
+    flex-flow: column;
+    align-items: end;
+}
+.vert > div > a::after {
+    content: " ➜";
 }
 .lin {
     fill: var(--fg-default);
